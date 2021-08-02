@@ -1,7 +1,7 @@
 # For more information: https://laravel.com/docs/sail
 version: '3'
 services:
-    scan_uploader:
+    scan_app:
         build:
             context: ./vendor/laravel/sail/runtimes/8.0
             dockerfile: Dockerfile
@@ -13,9 +13,12 @@ services:
             LARAVEL_SAIL: 1
         volumes:
             - '.:/var/www/html'
+        networks:
+            - scan_network
+            - default
         depends_on:
-            - mysql
-    mysql:
+            - scan_db
+    scan_db:
         image: 'mysql:8.0'
         environment:
             MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
@@ -24,15 +27,19 @@ services:
             MYSQL_PASSWORD: '${DB_PASSWORD}'
             MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
         volumes:
-            - 'sailmysql:/var/lib/mysql'
+            - 'scan_db:/var/lib/mysql'
         healthcheck:
           test: ["CMD", "mysqladmin", "ping", "-p${DB_PASSWORD}"]
           retries: 3
           timeout: 5s
+        networks:
+            - scan_network
 networks:
+        scan_network:
+                driver: bridge
         default:
                 external:
                         name: nginx_proxy
 volumes:
-    sailmysql:
+    scan_db:
         driver: local
